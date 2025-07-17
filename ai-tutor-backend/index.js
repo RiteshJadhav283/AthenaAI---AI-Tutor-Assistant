@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
   res.send('AI Tutor Backend is running 🚀');
 });
 
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT || 1546;
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
