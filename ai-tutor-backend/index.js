@@ -8,7 +8,7 @@ dotenv.config();
 
 // ✅ Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3549;
+const PORT = process.env.PORT || 3550; // Default to 3550 if PORT is not set
 
 // ✅ CORS Middleware — allow requests from React frontend
 app.use(cors({
@@ -21,6 +21,8 @@ app.use(cors({
     'http://localhost:3006',
     'http://localhost:8080',
     'http://localhost:8092',
+    'http://localhost:8082',
+
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
