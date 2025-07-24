@@ -1,20 +1,63 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config(); // ✅ Important to load .env
+const dotenv = require('dotenv');
+const path = require('path');
 
+// ✅ Load environment variables from .env file
+dotenv.config();
+
+// ✅ Initialize Express app
 const app = express();
+const PORT = process.env.PORT || 3549;
 
-app.use(cors());
-app.use(express.json());
+// ✅ CORS Middleware — allow requests from React frontend
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3003',
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:3005',
+    'http://localhost:3006',
+    'http://localhost:8080',
+    'http://localhost:8092',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-const aiRoutes = require('./routes/ai');
-app.use('/api/ai', aiRoutes);
+// ✅ Body parsers
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// ✅ Routes
+const aiRoutes = require('./routes/aiRoutes');
+const imageRoutes = require('./routes/imageRoutes');
+
+app.use('/api', aiRoutes);
+app.use('/api/image', imageRoutes);
+
+// ✅ Serve static images (if needed)
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+// ✅ Default health route
 app.get('/', (req, res) => {
-  res.send('AI Tutor Backend is running 🚀');
+  res.status(200).send('🚀 AI Tutor Backend is Running!');
 });
 
-const PORT = process.env.PORT || 1546;
+// ✅ 404 Route Handler (for undefined routes)
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// ✅ Error handler middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server Error:', err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ✅ Start the server
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server started at http://localhost:${PORT}`);
 });

@@ -1,0 +1,157 @@
+/* MarkdownTable.css */
+
+/* Base table styling for HTML tables rendered in markdown content */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: rgba(var(--card-rgb), 0.5);
+}
+
+/* Table header styling */
+.markdown-content thead {
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.15), rgba(var(--primary-rgb), 0.1));
+  border-bottom: 2px solid rgba(var(--primary-rgb), 0.3);
+}
+
+/* Table header cells */
+.markdown-content th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: bold;
+  color: var(--primary);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  border-right: 1px solid rgba(var(--primary-rgb), 0.2);
+  white-space: nowrap;
+}
+
+.markdown-content th:last-child {
+  border-right: none;
+}
+
+/* Table body styling */
+.markdown-content tbody {
+  divide-y: 1px solid rgba(var(--card-border-rgb), 0.6);
+}
+
+/* Table data cells */
+.markdown-content td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid rgba(var(--card-border-rgb), 0.5);
+  border-right: 1px solid rgba(var(--card-border-rgb), 0.3);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  white-space: normal;
+  word-break: break-words;
+}
+
+.markdown-content td:last-child {
+  border-right: none;
+}
+
+/* Table row hover effects */
+.markdown-content tr:hover {
+  background-color: rgba(var(--muted-rgb), 0.3);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Striped rows for better readability */
+.markdown-content tbody tr:nth-child(even) {
+  background-color: rgba(var(--muted-rgb), 0.1);
+}
+
+.markdown-content tbody tr:nth-child(odd) {
+  background-color: transparent;
+}
+
+/* Responsive table wrapper */
+.markdown-content .table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .markdown-content table {
+    font-size: 0.75rem;
+  }
+  
+  .markdown-content th,
+  .markdown-content td {
+    padding: 12px 16px;
+  }
+  
+  .markdown-content th {
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode support (if using CSS variables) */
+@media (prefers-color-scheme: dark) {
+  .markdown-content table {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .markdown-content th {
+    background: rgba(var(--primary-rgb), 0.2);
+    border-bottom-color: rgba(var(--primary-rgb), 0.4);
+  }
+  
+  .markdown-content tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Additional styling for mathematical expressions in tables */
+.markdown-content td code,
+.markdown-content th code {
+  background: rgba(var(--muted-rgb), 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8em;
+}
+
+/* Table caption styling (if used) */
+.markdown-content table caption {
+  caption-side: top;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--primary);
+  text-align: left;
+}
+
+/* Loading state for tables */
+.markdown-content table.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Scrollbar styling for table containers */
+.markdown-content .table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.markdown-content .table-wrapper::-webkit-scrollbar-track {
+  background: rgba(var(--muted-rgb), 0.1);
+  border-radius: 4px;
+}
+
+.markdown-content .table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(var(--primary-rgb), 0.3);
+  border-radius: 4px;
+}
+
+.markdown-content .table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--primary-rgb), 0.5);
+}

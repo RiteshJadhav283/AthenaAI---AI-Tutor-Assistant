@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AI Tutor Design System - Futuristic Dark Theme */
+
+@layer base {
+  :root {
+    /* Primary dark theme colors */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 88%;
+
+    /* Card styles with glass effect */
+    --card: 0 0% 100% / 0.03;
+    --card-foreground: 0 0% 88%;
+    --card-border: 0 0% 100% / 0.08;
+
+    /* Popover styles */
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 88%;
+
+    /* Neon green primary */
+    --primary: 157 100% 50%;
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 157 100% 70%;
+
+    /* Purple highlight secondary */
+    --secondary: 258 100% 78%;
+    --secondary-foreground: 0 0% 5%;
+    --secondary-glow: 258 100% 85%;
+
+    /* Muted colors */
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Accent colors */
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 88%;
+
+    /* Destructive (error) colors */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border and input styles */
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.05;
+    --ring: 157 100% 50%;
+
+    /* Border radius */
+    --radius: 0.75rem;
+
+    /* Sidebar specific colors */
+    --sidebar: 0 0% 3%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 157 100% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 8%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 100% / 0.08;
+    --sidebar-ring: 157 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-card border border-card-border backdrop-blur-xl;
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* Interactive elements */
+  .interactive {
+    @apply transition-all duration-300 ease-out hover:translate-y-[-2px] hover:shadow-lg;
+  }
+
+  /* Button variants */
+  .btn-neon {
+    @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground border-none px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-[0_4px_15px_rgba(0,255,157,0.2)] hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] hover:translate-y-[-1px];
+  }
+
+  .btn-purple {
+    @apply bg-gradient-to-r from-secondary to-secondary-glow text-secondary-foreground border-none px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-[0_4px_15px_rgba(157,143,255,0.2)] hover:shadow-[0_0_20px_rgba(157,143,255,0.4)] hover:translate-y-[-1px];
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-1.5;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/80;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
