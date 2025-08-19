@@ -1,8 +1,3 @@
-Got it ✅ — here’s the entire README.md in proper Markdown format. You can copy-paste this directly into your repo and it will render perfectly on GitHub.
-
-⸻
-
-
 # 📚 AI Tutor – Doubt Section (Athena AI)
 
 This is the **AI Tutor** project – currently focused on the **Doubt Section**, where students can ask subject-based questions and get AI-powered answers with **chat history stored in Supabase**.
@@ -149,7 +144,3 @@ create table doubts_messages (
 Developed entirely by Ritesh Jadhav
 
 ---
-
-⚡Pro tip: If you want the README to look even more professional, I can add a **banner image placeholder** and **shields.io badges** (e.g. “Built with React”, “Node.js”, “Supabase”).  
-
-Want me to add those extras for you?
