@@ -10,7 +10,7 @@ Other modules (voice mode, revision planner, gamification, institute dashboard, 
 
 ✅ **Working Now**  
 - Chat-based Doubt Section  
-- AI responses via OpenRouter API (`deepseek/deepseek-chat-v3-0324:free`)  
+- AI responses via OpenRouter API (`openrouter/free`)  
 - Supabase integration for saving chat history and messages  
 
 🚧 **Work in Progress**  

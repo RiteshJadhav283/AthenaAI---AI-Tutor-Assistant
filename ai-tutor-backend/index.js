@@ -12,18 +12,7 @@ const PORT = process.env.PORT || 3550; // Default to 3550 if PORT is not set
 
 // ✅ CORS Middleware — allow requests from React frontend
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3003',
-    'http://127.0.0.1:3003',
-    'http://127.0.0.1:3005',
-    'http://localhost:3006',
-    'http://localhost:8080',
-    'http://localhost:8092',
-    'http://localhost:8083',
-
-  ],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

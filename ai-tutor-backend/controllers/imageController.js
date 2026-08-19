@@ -1,6 +1,5 @@
 // controllers/imageController.js
 const fetch = require('node-fetch');
-const FormData = require('form-data');
 
 const generateImageFromPrompt = async (req, res) => {
   try {
@@ -10,17 +9,8 @@ const generateImageFromPrompt = async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    const form = new FormData();
-    form.append('prompt', prompt.trim());
-
-    const response = await fetch('https://clipdrop-api.co/text-to-image/v1', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.CLIPDROP_API_KEY,
-        ...form.getHeaders()
-      },
-      body: form
-    });
+    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(prompt.trim())}`;
+    const response = await fetch(pollinationsUrl);
 
     if (!response.ok) {
       const errorText = await response.text();

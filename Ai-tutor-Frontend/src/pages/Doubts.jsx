@@ -25,6 +25,8 @@ const SUBJECTS = [
   'Physics', 'Chemistry', 'Math', 'Biology', 'Engineering', 'History', 'Geography'
 ];
 
+const BACKEND_URL = typeof window !== 'undefined' ? `http://${window.location.hostname}:3550` : 'http://localhost:3550';
+
 export default function Doubts() {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -40,13 +42,13 @@ export default function Doubts() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchDoubtsHistory();
-    } else {
+    } else if (!user) {
       createDefaultChat();
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -70,7 +72,10 @@ export default function Doubts() {
         setChatHistory(formattedHistory);
         
         if (formattedHistory.length > 0) {
-          loadDoubt(formattedHistory[0].id);
+          // Only auto-load the first doubt if no active chat is selected yet
+          if (!activeChat || activeChat === 'default') {
+            loadDoubt(formattedHistory[0].id);
+          }
         }
       } else {
         createDefaultChat();
@@ -176,8 +181,8 @@ export default function Doubts() {
   };
 
   const extractImagePrompt = (content) => {
-    // Corrected regex pattern for image prompts
-    const imagePromptRegex = /```imagePrompt\s+([\s\S]*?)```/;
+    // Flexible and case-insensitive regex pattern for image prompts
+    const imagePromptRegex = /```(?:imagePrompt|image|image-prompt|image_prompt)\s+([\s\S]*?)```/i;
     const match = content.match(imagePromptRegex);
     
     if (match && match[1]) {
@@ -187,7 +192,7 @@ export default function Doubts() {
     return null;
   };
 
-  const processAIResponse = async (content) => {
+  const processAIResponse = (rawContent) => {
     const convertHtmlTableToMarkdown = (htmlContent) => {
       const tableMatch = htmlContent.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
       if (!tableMatch) return htmlContent;
@@ -233,31 +238,15 @@ export default function Doubts() {
       return htmlContent;
     };
 
-    content = convertHtmlTableToMarkdown(content);
-    
+    let content = convertHtmlTableToMarkdown(rawContent);
     const imagePrompt = extractImagePrompt(content);
-    let imageUrl = null;
 
     if (imagePrompt) {
-      try {
-        const response = await fetch(`http://localhost:3550/api/image/generate-image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: imagePrompt }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Image generation failed with status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        imageUrl = data.imageUrl;
-        
-        // Remove the image prompt block from the content
-        content = content.replace(/```image\n[\s\S]*?\n```/g, '').trim();
-      } catch (error) {
-        console.error('Image generation error:', error);
-      }
+      // Remove the image prompt block from the content case-insensitively
+      content = content.replace(/```(imagePrompt|image|image-prompt|image_prompt)\s+[\s\S]*?```/gi, '').trim();
+      // Remove any trailing headers related to the image prompt if they are left empty
+      content = content.replace(/## 📸 Image Prompt\s*$/i, '').trim();
+      content = content.replace(/### 🎨 Image Prompt[^\n]*\s*$/i, '').trim();
     }
 
     content = content.replace(/\|([^|\n]*)\|/g, (match, cell) => {
@@ -278,7 +267,7 @@ export default function Doubts() {
 
     content = content.replace(/\|\n\|/g, '|\n\n|');
     
-    return { content: content.trim(), imageUrl };
+    return { content: content.trim(), imagePrompt };
   };
 
   const handleSendMessage = async () => {
@@ -308,7 +297,7 @@ export default function Doubts() {
     setIsTyping(true);
 
     try {
-      const response = await fetch("http://localhost:3550/api/ask", {
+      const response = await fetch(`${BACKEND_URL}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: userMessage, subject: chatSubject })
@@ -319,15 +308,17 @@ export default function Doubts() {
       const data = await response.json();
       const aiRawResponse = data.answer || data.response || data.message || JSON.stringify(data);
       
-      const { content, imageUrl } = await processAIResponse(aiRawResponse);
+      const { content, imagePrompt } = processAIResponse(aiRawResponse);
       const aiHeading = data.heading || chatSubject + ' Doubt';
       const aiTopic = data.topic || '';
+      const aiMessageId = Date.now() + 1;
 
       const newAIMessage = {
-        id: Date.now() + 1,
+        id: aiMessageId,
         type: "ai",
         message: content,
-        imageUrl: imageUrl,
+        imageUrl: null,
+        isImageLoading: !!imagePrompt,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -347,52 +338,27 @@ export default function Doubts() {
         )
       );
 
+      setIsTyping(false); // Stop typing indicator immediately when text is available
+
+      let currentActiveChat = activeChat;
+      let newDoubtObj = null;
+
       if (user) {
-        if (activeChat !== 'default') {
-          await DoubtsService.addMessage({
-            doubt_id: activeChat,
-            message_type: 'user',
-            message_content: userMessage
-          });
-          
-          await DoubtsService.addMessage({
-            doubt_id: activeChat,
-            message_type: 'ai',
-            message_content: content,
-            image_url: imageUrl
-          });
-          
-          await DoubtsService.updateDoubt(activeChat, {
-            preview: userMessage.slice(0, 100),
-            title: aiHeading || currentChatObj.title
-          });
-        } else {
-          const newDoubt = await DoubtsService.createDoubt({
+        if (activeChat === 'default') {
+          newDoubtObj = await DoubtsService.createDoubt({
             user_id: user.id,
             title: aiHeading,
             subject: chatSubject,
             preview: userMessage.slice(0, 100)
           });
           
-          if (newDoubt) {
-            await DoubtsService.addMessage({
-              doubt_id: newDoubt.id,
-              message_type: 'user',
-              message_content: userMessage
-            });
-            
-            await DoubtsService.addMessage({
-              doubt_id: newDoubt.id,
-              message_type: 'ai',
-              message_content: content,
-              image_url: imageUrl
-            });
-            
-            setActiveChat(newDoubt.id);
+          if (newDoubtObj) {
+            currentActiveChat = newDoubtObj.id;
+            setActiveChat(newDoubtObj.id);
             
             setChatHistory(prevHistory => {
               const newHistoryItem = {
-                id: newDoubt.id,
+                id: newDoubtObj.id,
                 title: aiHeading,
                 subject: chatSubject,
                 time: "Just now",
@@ -405,20 +371,90 @@ export default function Doubts() {
             });
             
             setChats(prevChats => {
-              const updatedChat = {
-                ...currentChatObj,
-                id: newDoubt.id,
-                title: aiHeading,
-                heading: aiHeading
-              };
-              
               return prevChats.map(chat => 
-                chat.id === 'default' ? updatedChat : chat
+                chat.id === 'default' 
+                  ? { ...chat, id: newDoubtObj.id, title: aiHeading, heading: aiHeading } 
+                  : chat
               );
             });
           }
         }
       }
+
+      // Save user message immediately to Supabase
+      if (user && currentActiveChat !== 'default') {
+        await DoubtsService.addMessage({
+          doubt_id: currentActiveChat,
+          message_type: 'user',
+          message_content: userMessage
+        });
+      }
+
+      // Asynchronous background image generation
+      const generateImageAsync = async () => {
+        let finalImageUrl = null;
+        let imageErrorMsg = null;
+        
+        if (imagePrompt) {
+          try {
+            const imgResponse = await fetch(`${BACKEND_URL}/api/image/generate-image`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: imagePrompt }),
+            });
+
+            if (imgResponse.ok) {
+              const imgData = await imgResponse.json();
+              finalImageUrl = imgData.imageUrl;
+            } else {
+              const errData = await imgResponse.json().catch(() => ({}));
+              imageErrorMsg = errData.error || errData.details || `Server returned status ${imgResponse.status}`;
+            }
+          } catch (err) {
+            console.error('Asynchronous image generation error:', err);
+            imageErrorMsg = err.message || String(err);
+          }
+        }
+
+        // Update frontend state with final image or error
+        setChats(prevChats => 
+          prevChats.map(chat => 
+            chat.id === currentActiveChat 
+              ? {
+                  ...chat,
+                  messages: chat.messages.map(msg => 
+                    msg.id === aiMessageId 
+                      ? { 
+                          ...msg, 
+                          imageUrl: finalImageUrl, 
+                          isImageLoading: false,
+                          imageError: imageErrorMsg
+                        }
+                      : msg
+                  )
+                }
+              : chat
+          )
+        );
+
+        // Save AI message to Supabase
+        if (user && currentActiveChat !== 'default') {
+          await DoubtsService.addMessage({
+            doubt_id: currentActiveChat,
+            message_type: 'ai',
+            message_content: content,
+            image_url: finalImageUrl
+          });
+          
+          await DoubtsService.updateDoubt(currentActiveChat, {
+            preview: userMessage.slice(0, 100),
+            title: aiHeading || (newDoubtObj ? newDoubtObj.title : currentChatObj?.title)
+          });
+        }
+      };
+
+      // Fire image generation in background
+      generateImageAsync();
 
     } catch (error) {
       console.error('Frontend fetch error:', error);
@@ -851,29 +887,50 @@ export default function Doubts() {
                     )}
                   </div>
                   
-                  {chat.type === "ai" && chat.imageUrl && (
+                  {chat.type === "ai" && (chat.imageUrl || chat.isImageLoading || chat.imageError) && (
                     <div className="flex justify-start mt-4">
-                      <div className="max-w-2xl ml-11">
+                      <div className="max-w-2xl ml-11 w-full sm:w-[450px]">
                         <div className="glass-card p-4 rounded-xl border-card-border bg-card">
                           <div className="flex items-center gap-2 mb-3 text-sm text-primary font-medium">
                             <Image className="h-4 w-4" />
-                            <span>Generated Diagram</span>
+                            <span>
+                              {chat.isImageLoading 
+                                ? 'Generating Diagram...' 
+                                : chat.imageError 
+                                ? 'Diagram Failed' 
+                                : 'Generated Diagram'}
+                            </span>
                           </div>
-                          <div className="relative rounded-lg overflow-hidden bg-muted/50">
-                            <img
-                              src={chat.imageUrl}
-                              alt="Generated diagram"
-                              className="w-full h-auto rounded-lg shadow-lg max-h-96 object-contain"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'https://via.placeholder.com/400x200/1a1a1a/ffffff?text=Image+Could+Not+Load';
-                                e.target.alt = 'Image could not be loaded';
-                              }}
-                              style={{
-                                minHeight: '100px',
-                                backgroundColor: 'rgba(255,255,255,0.05)'
-                              }}
-                            />
+                          <div className="relative rounded-lg overflow-hidden bg-muted/50 min-h-[150px] flex items-center justify-center">
+                            {chat.isImageLoading ? (
+                              <div className="flex flex-col items-center justify-center p-6 text-center">
+                                <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+                                <p className="text-xs text-muted-foreground">Drawing custom educational diagram...</p>
+                              </div>
+                            ) : chat.imageError ? (
+                              <div className="flex flex-col items-center justify-center p-6 text-center text-red-500">
+                                <div className="h-8 w-8 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                                  <X className="h-4 w-4 text-red-500" />
+                                </div>
+                                <p className="text-xs font-semibold mb-1">Failed to generate diagram</p>
+                                <p className="text-[10px] text-muted-foreground max-w-[300px] break-words">{chat.imageError}</p>
+                              </div>
+                            ) : (
+                              <img
+                                src={chat.imageUrl}
+                                alt="Generated diagram"
+                                className="w-full h-auto rounded-lg shadow-lg max-h-96 object-contain"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/400x200/1a1a1a/ffffff?text=Image+Could+Not+Load';
+                                  e.target.alt = 'Image could not be loaded';
+                                }}
+                                style={{
+                                  minHeight: '100px',
+                                  backgroundColor: 'rgba(255,255,255,0.05)'
+                                }}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>

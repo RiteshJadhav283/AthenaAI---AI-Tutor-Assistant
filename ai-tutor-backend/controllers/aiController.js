@@ -115,7 +115,7 @@ Do **not** generate image prompts for general, off-topic, or vague questions.
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'deepseek/deepseek-chat-v3-0324:free',
+        model: 'nvidia/nemotron-3-nano-30b-a3b:free',
         messages: [
           {
             role: 'system',
