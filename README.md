@@ -141,6 +141,6 @@ create table doubts_messages (
 
 👨‍💻 Author
 
-Developed entirely by Ritesh Jadhav
+Developed entirely by Ritesh Jadhav And Samarth Devadiga
 
 ---
